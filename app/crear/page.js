@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 export default function CrearAutor() {
 
@@ -10,27 +10,43 @@ export default function CrearAutor() {
   const [image, setImage] = useState("");
   const [error, setError] = useState("");
 
+  const isValid =
+  name.trim() !== "" &&
+  birthDate.trim() !== "";
+
+  useEffect(() => {
+
+    if (name && !birthDate) {
+      setError("nombre y fecha de nacimiento obligatorios");
+      return;
+    }
+
+    if (name && birthDate) {
+
+      const date = new Date(birthDate);
+
+      if (isNaN(date.getTime())) {
+        setError("fecha de nacimiento no valida");
+        return;
+      }
+
+      const today = new Date();
+
+      if (date > today) {
+        setError("fecha de nacimiento no puede ser en el futuro");
+        return;
+      }
+
+      setError("");
+    }
+
+  }, [name, birthDate]);
+
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (!name || !birthDate) {
-      setError("Nombre y fecha de nacimiento son obligatorios");
-      return;
-    }
-
-    const date = new Date(birthDate);
-
-    if (isNaN(date.getTime())) {
-      setError("La fecha de nacimiento no es válida");
-      return;
-    }
-
-    const today = new Date();
-    if (date > today) {
-      setError("La fecha de nacimiento no puede ser en el futuro");
-      return;
-    }
-
+    if (!isValid) return;
+    
     try {
 
       const response = await fetch("http://127.0.0.1:8080/api/authors", {
@@ -47,11 +63,11 @@ export default function CrearAutor() {
       });
 
       if (!response.ok) {
-        throw new Error("Error al crear autor");
+        throw new Error("error al crear autor");
       }
 
       setError("");
-      alert("Autor creado correctamente");
+      alert("autor creado correctamente");
 
       setName("");
       setBirthDate("");
@@ -59,7 +75,7 @@ export default function CrearAutor() {
       setImage("");
 
     } catch (err) {
-      setError("No se pudo crear el autor. Verifique los datos.");
+      setError("no se pudo crear. Verifique los datos.");
     }
   };
 
@@ -113,7 +129,7 @@ export default function CrearAutor() {
 
         <br />
 
-        <button type="submit">
+        <button type="submit" disabled={!isValid}>
           Crear
         </button>
 
